@@ -1,36 +1,45 @@
 package com.Supra.The_Forecastinator.Service;
-import java.util.List;
 
 import com.Supra.The_Forecastinator.Model.WeatherModel;
 import com.Supra.The_Forecastinator.View.WeatherResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-@RestController
-@RequestMapping("/weather")
+//Changed class to only handle logic of interacting with the weather API.
+//WeatherService now handles API interaction and Fetches raw data from the OPEN-Meteo API for various use cases.
+
+@Service
 public class WeatherService {
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String BASE_URL = "https://api.open-meteo.com/v1/forecast";
 
-        @GetMapping("/fetchAPI") //GET
-        public WeatherResponse fetchAPI() {
-            String url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m";
-            RestTemplate restTemplate = new RestTemplate();
-            WeatherModel weatherModel;
-
-            try {
-                weatherModel = restTemplate.getForObject(url, WeatherModel.class);
-
-                if (weatherModel != null) {
-                    List<Double> temperatures = weatherModel.getHourly().getTemperature_2m();
-                    double averageTemperature = temperatures.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-
-                    // Returnera en strukturerad respons
-                    return new WeatherResponse(weatherModel.getLatitude(), weatherModel.getLongitude(), averageTemperature);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
+    public WeatherModel fetchWeatherData(double latitude, double longitude, String parameters) {
+        String url = String.format("%s?latitude=%f&longitude=%f&%s&timezone=auto", BASE_URL, latitude, longitude, parameters);
+        return restTemplate.getForObject(url, WeatherModel.class);
     }
+
+    public WeatherResponse getCurrentWeather(double latitude, double longitude) {
+        String parameters = "hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation";
+        WeatherModel weatherData = fetchWeatherData(latitude, longitude, parameters);
+
+        // Logic to extract and return current hour's data (e.g., temperature, precipitation)
+        return WeatherResponseTransformer.toCurrentWeatherResponse(weatherData);
+    }
+
+    public WeatherResponse getForecast(double latitude, double longitude) {
+        String parameters = "daily=temperature_2m_max,temperature_2m_min,precipitation_sum";
+        WeatherModel weatherData = fetchWeatherData(latitude, longitude, parameters);
+
+        // Logic to structure forecast data for coming days
+        return WeatherResponseTransformer.toForecastResponse(weatherData);
+    }
+
+    public WeatherResponse getHistoricalWeather(double latitude, double longitude, String startDate, String endDate) {
+        String parameters = String.format("start_date=%s&end_date=%s&daily=temperature_2m_max,temperature_2m_min,precipitation_sum", startDate, endDate);
+        WeatherModel weatherData = fetchWeatherData(latitude, longitude, parameters);
+
+        // Logic to process historical weather data
+        return WeatherResponseTransformer.toHistoricalWeatherResponse(weatherData);
+    }
+
+}
