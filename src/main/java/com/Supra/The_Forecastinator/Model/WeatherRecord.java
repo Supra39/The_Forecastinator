@@ -1,20 +1,23 @@
 package com.Supra.The_Forecastinator.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id; // Correct import for JPA
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "weather_records") //this maps this class to my table in db
 public class WeatherRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
+    @Column(nullable = false) //this annotation allows me to customize how a column is constrained, in this case the column cannot be empty
+    private Long id;
+    @Column(nullable = false)
     private String city;
+    @Column(nullable = false)
     private LocalDate date;
+    @Column(nullable = false)
     private double temperature;
+    @Column(nullable = false)
     private double humidity;
 
     // Getters and Setters (if not already present)

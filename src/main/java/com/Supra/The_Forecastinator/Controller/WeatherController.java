@@ -1,5 +1,6 @@
 package com.Supra.The_Forecastinator.Controller;
 
+import com.Supra.The_Forecastinator.Model.WeatherRecord;
 import com.Supra.The_Forecastinator.Service.WeatherService;
 import com.Supra.The_Forecastinator.View.WeatherResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ public class WeatherController {
 
     @Autowired
     private WeatherService weatherService;
-    //changed the class to use @PathVariable istead of @RequestParam, in my case none of the variables are optional so it makes more sense to only use @PathVariable, to make the URL easier to type.
+
     @GetMapping("/current/{latitude}/{longitude}") // get current weather, updated to use PathVariable to make the URL more intuitive to write
     public ResponseEntity<WeatherResponse> getCurrentWeather(
             @PathVariable double latitude,
@@ -34,6 +35,29 @@ public class WeatherController {
             @PathVariable String startDate,
             @PathVariable String endDate) {
         return ResponseEntity.ok(weatherService.getHistoricalWeather(latitude, longitude, startDate, endDate));
+    }
+
+    // Create a new weather record
+    @PostMapping("/records")
+    public ResponseEntity<WeatherRecord> createWeatherRecord(@RequestBody WeatherRecord weatherRecord) {
+        WeatherRecord createdRecord = weatherService.createWeatherRecord(weatherRecord);
+        return ResponseEntity.ok(createdRecord);
+    }
+
+    // Update an existing weather record
+    @PutMapping("/records/{id}")
+    public ResponseEntity<WeatherRecord> updateWeatherRecord(
+            @PathVariable Long id,
+            @RequestBody WeatherRecord weatherRecord) {
+        WeatherRecord updatedRecord = weatherService.updateWeatherRecord(id, weatherRecord);
+        return ResponseEntity.ok(updatedRecord);
+    }
+
+    // Delete a weather record
+    @DeleteMapping("/records/{id}")
+    public ResponseEntity<String> deleteWeatherRecord(@PathVariable Long id) {
+        weatherService.deleteWeatherRecord(id);
+        return ResponseEntity.ok("Record with ID " + id + " has been deleted.");
     }
 
 }

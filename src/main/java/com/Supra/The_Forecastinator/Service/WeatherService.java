@@ -1,9 +1,14 @@
 package com.Supra.The_Forecastinator.Service;
 
 import com.Supra.The_Forecastinator.Model.WeatherModel;
+import com.Supra.The_Forecastinator.Model.WeatherRecord;
+import com.Supra.The_Forecastinator.Model.WeatherRecordRepository;
 import com.Supra.The_Forecastinator.View.WeatherResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Optional;
 
 //Changed class to only handle logic of interacting with the weather API.
 //WeatherService now handles API interaction and Fetches raw data from the OPEN-Meteo API for various use cases.
@@ -12,6 +17,9 @@ import org.springframework.web.client.RestTemplate;
 public class WeatherService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final String BASE_URL = "https://api.open-meteo.com/v1/forecast";
+
+    @Autowired //used to interact with DB
+    private WeatherRecordRepository weatherRecordRepository;
 
     public WeatherModel fetchWeatherData(double latitude, double longitude, String parameters) {
         String url = String.format("%s?latitude=%f&longitude=%f&%s&timezone=auto", BASE_URL, latitude, longitude, parameters);
@@ -41,5 +49,37 @@ public class WeatherService {
         // Logic to process historical weather data
         return WeatherResponseTransformer.toHistoricalWeatherResponse(weatherData);
     }
+
+
+    //added CRUD operations for DB
+    // Create a new weather record
+    public WeatherRecord createWeatherRecord(WeatherRecord record) {
+        return weatherRecordRepository.save(record);
+    }
+
+    // Update an existing weather record
+    public WeatherRecord updateWeatherRecord(Long id, WeatherRecord updatedRecord) {
+        Optional<WeatherRecord> existingRecordOpt = weatherRecordRepository.findById(id);
+        if (existingRecordOpt.isPresent()) {
+            WeatherRecord existingRecord = existingRecordOpt.get();
+            existingRecord.setCity(updatedRecord.getCity());
+            existingRecord.setDate(updatedRecord.getDate());
+            existingRecord.setTemperature(updatedRecord.getTemperature());
+            existingRecord.setHumidity(updatedRecord.getHumidity());
+            return weatherRecordRepository.save(existingRecord);
+        } else {
+            throw new IllegalArgumentException("Record with ID " + id + " not found.");
+        }
+    }
+
+    // Delete a weather record
+    public void deleteWeatherRecord(Long id) {
+        if (weatherRecordRepository.existsById(id)) {
+            weatherRecordRepository.deleteById(id);
+        } else {
+            throw new IllegalArgumentException("Record with ID " + id + " not found.");
+        }
+    }
+
 
 }
