@@ -58,27 +58,28 @@ public class WeatherService {
     }
 
     // Update an existing weather record
-    public WeatherRecord updateWeatherRecord(Long id, WeatherRecord updatedRecord) {
-        Optional<WeatherRecord> existingRecordOpt = weatherRecordRepository.findById(id);
-        if (existingRecordOpt.isPresent()) {
-            WeatherRecord existingRecord = existingRecordOpt.get();
-            existingRecord.setCity(updatedRecord.getCity());
-            existingRecord.setDate(updatedRecord.getDate());
-            existingRecord.setTemperature(updatedRecord.getTemperature());
-            existingRecord.setHumidity(updatedRecord.getHumidity());
-            return weatherRecordRepository.save(existingRecord);
-        } else {
-            throw new IllegalArgumentException("Record with ID " + id + " not found.");
-        }
+    //updated method to Optional, this is to better handle errors and status codes with weathercontroller
+    public Optional<WeatherRecord> updateWeatherRecord(Long id, WeatherRecord updatedRecord) {
+        return weatherRecordRepository.findById(id)
+                .map(existingRecord -> {
+                    // Update fields of the existing record
+                    existingRecord.setCity(updatedRecord.getCity());
+                    existingRecord.setDate(updatedRecord.getDate());
+                    existingRecord.setTemperature(updatedRecord.getTemperature());
+                    existingRecord.setHumidity(updatedRecord.getHumidity());
+                    return weatherRecordRepository.save(existingRecord);
+                });
     }
 
+
     // Delete a weather record
-    public void deleteWeatherRecord(Long id) {
+    public boolean deleteWeatherRecord(Long id) {
         if (weatherRecordRepository.existsById(id)) {
             weatherRecordRepository.deleteById(id);
         } else {
             throw new IllegalArgumentException("Record with ID " + id + " not found.");
         }
+        return false;
     }
 
 

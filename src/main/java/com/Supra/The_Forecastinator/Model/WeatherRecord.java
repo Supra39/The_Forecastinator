@@ -1,6 +1,9 @@
 package com.Supra.The_Forecastinator.Model;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Entity
@@ -8,15 +11,19 @@ import java.time.LocalDate;
 public class WeatherRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     @Column(nullable = false) //this annotation allows me to customize how a column is constrained, in this case the column cannot be empty
     private Long id;
+
+    @NotBlank(message = "City cannot be blank or null. Please enter a valid city")
     @Column(nullable = false)
     private String city;
+    @NotNull(message = "Date cannot be null. Please provide a valid date.")
     @Column(nullable = false)
     private LocalDate date;
+    @NotNull(message = "Temperature cannot be null. Please provide a valid temperature.")
     @Column(nullable = false)
     private double temperature;
+    @NotNull(message = "Humidity cannot be null. Please provide a valid Humidity.")
     @Column(nullable = false)
     private double humidity;
 
